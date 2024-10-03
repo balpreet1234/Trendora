@@ -8,8 +8,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
-
-
+use Illuminate\Support\Str;
+use App\Providers\RouteServiceProvider;
 class LoginController extends Controller
 {
      /**
@@ -100,24 +100,20 @@ class LoginController extends Controller
             'email' => 'required|email',
             'password' => 'required'
         ]);
-
-        if(Auth::attempt($credentials))
-        {
-            $request->session()->regenerate();
-
-            if (auth()->user()->user_type == '1' || auth()->user()->user_type == '2') {
-                return redirect()->route('admin.dashboard')
-                ->withSuccess('You have successfully logged in!');
-            }else{
-                return redirect()->route('home');
+    
+        if (Auth::attempt($credentials)) {
+            if (auth()->user()->role == 'admin' || auth()->user()->role == 'merchant') {
+                return redirect()->route('dashboard')
+                    ->withSuccess('You have successfully logged in!');
+            } else {
+                dd($credentials);
+                return back()->withErrors(['email' => 'Your provided credentials do not match in our records.'])->onlyInput('email');
             }
-
-
         }
-
-        return back()->withErrors(['email' => 'Your provided credentials do not match in our records.', ])->onlyInput('email');
-
+    
+        
     }
+    
 
     /**
      * Display a dashboard to authenticated users.
@@ -128,7 +124,7 @@ class LoginController extends Controller
     {
         if(Auth::check())
         {
-            return view('admin.dashboard');
+            return view('dashboard');
         }
 
         return redirect()->route('login')->withErrors([ 'email' => 'Please login to access the dashboard.', ])->onlyInput('email');
@@ -185,22 +181,24 @@ class LoginController extends Controller
 
     public function redirectToGoogle()
     {
+        
         return Socialite::driver('google')->redirect();
     }
 
 
     public function handleGoogleCallback()
     {
+      
         $googleUser = Socialite::driver('google')->stateless()->user();
+     
         $user = User::where('email', $googleUser->email)->first();
         if(!$user)
         {
-            $user = User::create(['name' => $googleUser->name, 'email' => $googleUser->email, 'password' => \Hash::make(rand(100000,999999))]);
+            $user = User::create(['name' => $googleUser->name, 'email' => $googleUser->email, 'password' => \Hash::make(rand(100000,999999)),'role'=>'admin']);
         }
 
         Auth::login($user);
-
-        return redirect(RouteServiceProvider::HOME);
+        return redirect('/dashboard');
     }
 
 

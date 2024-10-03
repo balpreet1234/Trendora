@@ -88,21 +88,7 @@
                 <div class="col">
                     <h5 class="mb-0">Recent Orders</h5>
                 </div>
-                <div class="col">
-                    <div class="d-flex align-items-center justify-content-end gap-3 cursor-pointer">
-                        <div class="dropdown">
-                            <a class="dropdown-toggle dropdown-toggle-nocaret" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bx bx-dots-horizontal-rounded font-22 text-option"></i>
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="javascript:;">Action</a></li>
-                                <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+                
             </div>
         </div>
         <div class="card-body">
@@ -110,7 +96,7 @@
                 <table class="table align-middle mb-0">
                     <thead class="table-light">
                         <tr>
-                            <th>#ID</th>
+                            <th>#Sr No.</th>
                             <th>Product</th>
                             <th>Quantity</th>
                             <th>Price</th>
@@ -120,48 +106,45 @@
                     </thead>
                     <tbody>
                         @foreach ($recentOrders as $order)
-                            <tr>
-                                <td>#{{ $loop->iteration }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-3">
-
-                                        <div class="product-info">
-                                            @if($carts && count($carts) > 0)
-                                @foreach($carts as $cartItem)
-                                    <tr>
-                                        <td>{{ $cartItem->product->title }}</td>
-
-                                        <td>{{ $cartItem->quantity }}</td>
-
-                                    </tr>
-                                @endforeach
-                            @else
-                                <tr>
-                                    <td colspan="4" class="text-center">No products found for this order.</td>
-                                </tr>
-                            @endif
+                        <tr>
+                            <td>#{{ $loop->iteration }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="product-info">
+                                        @if($order->carts && count($order->carts) > 0)
+                                        @foreach($order->carts as $cartItem)
+                                        <div>
+                                            {{ $cartItem->product->title }} ({{ $cartItem->quantity }})
                                         </div>
+                                        @endforeach
+                                        @else
+                                        <div class="text-center">No products found for this order.</div>
+                                        @endif
                                     </div>
-                                </td>
-                                <td>{{ $order->quantity }}</td>
-                                <td>${{ number_format($order->price, 2) }}</td>
-                                <td>{{ $order->created_at->format('M d, Y') }}</td>
-                                <td>
-                                    <div class="d-flex align-items-center gap-3 fs-6">
-                                        <a href="javascript:;" class="text-primary" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View detail" aria-label="Views">
-                                            <i class="bi bi-eye-fill"></i>
-                                        </a>
-                                        <a href="javascript:;" class="text-warning" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Edit info" aria-label="Edit">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                        <a href="javascript:;" class="text-danger" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete" aria-label="Delete">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
+                                </div>
+                            </td>
+                            <td>{{ $order->quantity }}</td>
+                            <td>${{ number_format($order->price, 2) }}</td>
+                            <td>{{ $order->created_at->format('M d, Y') }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3 fs-6">
+                                    <a href="{{ route('order.show', $order->id) }}" class="text-primary" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View detail" aria-label="Views">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </a>
+                                  
+                                    <form method="POST" action="{{ route('order.delete', $order->id) }}" style="display:inline;" class="delete-form">
+                                            @csrf
+                                            @method('delete')
+                                            <a  class="delete_category dltBtn" data-id="{{ $order->id }}" data-toggle="tooltip" title="Delete">
+                                                <i class="bi bi-trash-fill" style="font-size: 14px;color:red;"></i>
+                                            </a>
+                                        </form>
+                                </div>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
+
                 </table>
             </div>
         </div>
@@ -173,5 +156,36 @@
 <!--end page main-->
 
 
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
+<script>
+
+    document.addEventListener('DOMContentLoaded', function () {
+        const deleteButtons = document.querySelectorAll('.delete_category');
+
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function (event) {
+                event.preventDefault();
+                const form = button.closest('form');
+
+                Swal.fire({
+                    title: 'Are you sure?',
+                    text: "Once deleted, you will not be able to recover this product!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Yes, delete it!',
+                    cancelButtonText: 'Cancel'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    } else {
+                        Swal.fire('Cancelled', 'Your product is safe!', 'info');
+                    }
+                });
+            });
+        });
+    });
+</script>
 @endsection

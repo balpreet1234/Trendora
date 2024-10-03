@@ -20,7 +20,7 @@
                     <div class="text-center mb-4">
                         <h3>{{ $user->name }}</h3>
                         <p class="text-muted">{{ $user->role }}</p>
-                        <a href="{{ route('admin.edit', $user->id) }}" class="btn btn-warning">Edit Profile</a>
+                        <a href="{{ route('admin.edit', $user->id) }}" class="btn btn-primary">Edit Profile</a>
                     </div>
 
                     <hr>
